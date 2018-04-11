@@ -11,8 +11,9 @@ module ula_testbench();
 	logic [1:0] ALUControl;
 	logic [3:0] Flags;
 	logic [3:0] F_expected;
-	logic [31:0] linha, erros;
+	logic [31:0] linha;
 	logic [105:0] testvectors[20000:0];
+	integer file, erros;
 
 // instantiate device under test
 	ULA teste(A, B, ALUControl, y, Flags);
@@ -65,8 +66,11 @@ always @(negedge clk) //verifica na descida do clock
 	if (testvectors[linha][0] === 1'bx) begin
 	    $display("%d tests completed with %d errors", linha, erros);
 	    //Mostra na tela quantos testes foram realizados e quantos erros
+	    file = $fopen("erros.txt","w");
+	    $fwrite(file,"%d erro(s) em %d teste(s)\n", erros, linha);
 	    $stop;
 	end
+$fclose(file);
 end
 
 endmodule
