@@ -2,9 +2,9 @@
 
 ## arquivo ULA.sv <br />
 module ULA (input logic [31:0] A, B,<br />
-	    input logic [1:0] ALUControl,<br />
+	    <p>input logic [1:0] ALUControl,<br />
 	    output logic [31:0] Result,<br />
-	    output logic [3:0] ALUFlags);<br />
+	    output logic [3:0] ALUFlags);<br /></p>
 	    
 ### ALUControl: <br />
         00: Soma (A + B)
