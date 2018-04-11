@@ -1,5 +1,4 @@
-Unidade lógica e aritimética com entradas de 32 bits
-
+#Unidade lógica e aritimética com entradas de 32 bits
 arquivo ULA.sv
 
 module ULA (input logic [31:0] A, B,
@@ -17,7 +16,7 @@ ALUFlags:
         (Overflow, Carry, Negative, Zero)
 
 
-Testbanch
+#Testbanch
 arquivo ula_testbanch.sv
 arquivo testvect.txt
 
