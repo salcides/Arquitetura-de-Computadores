@@ -1,0 +1,15 @@
+C:/Users/igor_/Documents/ULA/ula_testbench.sv {1 {vlog -work work -sv -stats=none C:/Users/igor_/Documents/ULA/ula_testbench.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5c Compiler 2017.01 Jan 23 2017
+-- Compiling module ula_testbench
+
+Top level modules:
+	ula_testbench
+
+} {} {}} C:/Users/igor_/Documents/ULA/ULA.sv {1 {vlog -work work -sv -stats=none C:/Users/igor_/Documents/ULA/ULA.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5c Compiler 2017.01 Jan 23 2017
+-- Compiling module ULA
+
+Top level modules:
+	ULA
+
+} {} {}}
