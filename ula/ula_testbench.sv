@@ -1,9 +1,9 @@
-//Testbench da Unidade lógica e aritimética entradas de 32 bits
+//Testbench da Unidade lÃ³gica e aritimÃ©tica entradas de 32 bits
 //
 //Igor Rodrigues Salcides
 //Gabriel Saade Pagani
 //
-//Fonte: Digital Design and Computer Architecture ARM® Edition © 2015 by Elsevier Inc.
+//Fonte: Digital Design and Computer Architecture ARMÂ® Edition Â© 2015 by Elsevier Inc.
 
 module ula_testbench();
 	logic clk;
@@ -17,14 +17,14 @@ module ula_testbench();
 
 // instantiate device under test
 	ULA teste(A, B, ALUControl, y, Flags);
-	//de acordo com as entradas de teste, calcula a saída e salva na variável y
+	//de acordo com as entradas de teste, calcula a saÃ­da e salva na variÃ¡vel y
 
 // clock
 always begin
     clk = 1; #50; clk = 0; #50;
 end
 
-// Arquivo de teste. Lê os dados em formato Hexadecimal
+// Arquivo de teste. LÃª os dados em formato Hexadecimal
 initial begin
     $readmemh("testvect.txt", testvectors);
     linha = 0; erros = 0;
@@ -38,13 +38,13 @@ always @(posedge clk) // carrega na subida do clock
 	ALUControl = testvectors[linha][97:96]; //Entrada teste
 	A = testvectors[linha][95:64]; //Entrada teste
 	B = testvectors[linha][63:32]; //Entrada teste
-	y_expected = testvectors[linha][31:0]; //Saída esperada teste
+	y_expected = testvectors[linha][31:0]; //SaÃ­da esperada teste
 end
 
-// Verificação dos resultados
+// VerificaÃ§Ã£o dos resultados
 always @(negedge clk) //verifica na descida do clock
     begin
-	if (y !== y_expected) begin //compara saída calculada com a saída esperada
+	if (y !== y_expected) begin //compara saÃ­da calculada com a saÃ­da esperada
 	    $display("Error in vector %d", linha);
 	    $display(" Inputs : A = %h, B = %h, ALUControl = %b", A, B, ALUControl);
 	    $display(" Outputs: y = %h (%h expected)", y, y_expected);
@@ -52,7 +52,7 @@ always @(negedge clk) //verifica na descida do clock
 	    erros = erros + 1;
 	end
 
-	if (Flags !== F_expected) begin //compara saída calculada com a saída esperada
+	if (Flags !== F_expected) begin //compara saÃ­da calculada com a saÃ­da esperada
 	    $display("Error in vector %d", linha);
 	    $display(" Inputs : A = %h, B = %h, ALUControl = %b", A, B, ALUControl);
 	    $display(" Outputs: y = %h (%h expected)", y, y_expected);
@@ -68,6 +68,7 @@ always @(negedge clk) //verifica na descida do clock
 	    //Mostra na tela quantos testes foram realizados e quantos erros
 	    file = $fopen("erros.txt","w");
 	    $fwrite(file,"%d erro(s) em %d teste(s)\n", erros, linha);
+	    $display("\nArquivo erros.txt escrito");
 	    $stop;
 	end
 $fclose(file);
