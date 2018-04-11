@@ -14,6 +14,7 @@ module ula_testbench();
 
 // instantiate device under test
 	ULA teste(A, B, ALUControl, y);
+	//de acordo com as entradas de teste, calcula a saída e salva na variável y
 
 // clock
 always begin
@@ -30,16 +31,16 @@ end
 always @(posedge clk) // carrega na subida do clock
     begin
 	#1;
-	ALUControl = testvectors[linha][97:96];
-	A = testvectors[linha][95:64];
-	B = testvectors[linha][63:32];
-	y_expected = testvectors[linha][31:0];
+	ALUControl = testvectors[linha][97:96]; //Entrada teste
+	A = testvectors[linha][95:64]; //Entrada teste
+	B = testvectors[linha][63:32]; //Entrada teste
+	y_expected = testvectors[linha][31:0]; //Saída esperada teste
 end
 
 // Verificação dos resultados
 always @(negedge clk) //verifica na descida do clock
     begin
-	if (y !== y_expected) begin
+	if (y !== y_expected) begin //compara saída calculada com a saída esperada
 	    $display("Error in vector %d", linha);
 	    $display(" Inputs : A = %h, B = %h, ALUControl = %b", A, B, ALUControl);
 	    $display(" Outputs: y = %h (%h expected)", y, y_expected);
@@ -50,6 +51,7 @@ always @(negedge clk) //verifica na descida do clock
 
 	if (testvectors[linha][0] === 1'bx) begin
 	    $display("%d tests completed with %d errors", linha, erros);
+	    //Mostra na tela quantos testes foram realizados e quantos erros
 	    $stop;
 	end
 end
