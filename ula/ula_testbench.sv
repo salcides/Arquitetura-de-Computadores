@@ -9,47 +9,47 @@ module ula_testbench();
 	logic clk;
 	logic [31:0] A, B, y, y_expected;
 	logic [1:0] ALUControl;
-	logic [31:0] vectornum, errors;
+	logic [31:0] linha, erros;
 	logic [99:0] testvectors[10000:0];
 
 // instantiate device under test
 	ULA teste(A, B, ALUControl, y);
 
-// generate clock
+// clock
 always begin
     clk = 1; #50; clk = 0; #50;
 end
 
-// at start of test, load vectors
+// Arquivo de teste. Lê os dados em formato Hexadecimal
 initial begin
-	$readmemh("testvect.txt", testvectors);
-    vectornum = 0; errors = 0;
+    $readmemh("testvect.txt", testvectors);
+    linha = 0; erros = 0;
 end
 
-// apply test vectors at rising edge of clock
-always @(posedge clk)
+// Carrega uma linha do arquivo de teste
+always @(posedge clk) // carrega na subida do clock
     begin
 	#1;
-	ALUControl = testvectors[vectornum][97:96];
-	A = testvectors[vectornum][95:64];
-	B = testvectors[vectornum][63:32];
-	y_expected = testvectors[vectornum][31:0];
+	ALUControl = testvectors[linha][97:96];
+	A = testvectors[linha][95:64];
+	B = testvectors[linha][63:32];
+	y_expected = testvectors[linha][31:0];
 end
 
-// check results on falling edge of clock
-always @(negedge clk)
+// Verificação dos resultados
+always @(negedge clk) //verifica na descida do clock
     begin
 	if (y !== y_expected) begin
-	    $display("Error in vector %d", vectornum);
+	    $display("Error in vector %d", linha);
 	    $display(" Inputs : A = %h, B = %h, ALUControl = %b", A, B, ALUControl);
-	    $display(" Outputs: y = %h (%h expected)",y, y_expected);
-	    errors = errors+1;
+	    $display(" Outputs: y = %h (%h expected)", y, y_expected);
+	    erros = erros + 1;
 	end
 
-	vectornum = vectornum + 1;
+	linha = linha + 1;
 
-	if (testvectors[vectornum][0] === 1'bx) begin
-	    $display("%d tests completed with %d errors", vectornum, errors);
+	if (testvectors[linha][0] === 1'bx) begin
+	    $display("%d tests completed with %d errors", linha, erros);
 	    $stop;
 	end
 end
