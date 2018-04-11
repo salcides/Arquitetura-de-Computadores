@@ -22,7 +22,7 @@ end
 
 // at start of test, load vectors
 initial begin
-    $readmemh("ex5.13_alu.tv", testvectors);
+	$readmemh("testvect.txt", testvectors);
     vectornum = 0; errors = 0;
 end
 
