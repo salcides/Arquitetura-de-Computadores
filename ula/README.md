@@ -1,5 +1,7 @@
 Unidade lógica e aritimética com entradas de 32 bits
 
+arquivo ULA.sv
+
 module ULA (input logic [31:0] A, B,
 	    input logic [1:0] ALUControl,
 	    output logic [31:0] Result,
@@ -13,3 +15,14 @@ ALUControl:
   
 ALUFlags:
         (Overflow, Carry, Negative, Zero)
+
+
+Testbanch
+arquivo ula_testbanch.sv
+arquivo testvect.txt
+
+o teste é realizado pelo arquivo .sv que lê as informações do arquivo .txt
+cada linha do .txt contem as informações (nesta ordem):
+FLAGS_ALUControl_A_B_Y
+
+as flags e a saida y são os resultados esperados.
