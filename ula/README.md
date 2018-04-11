@@ -25,3 +25,5 @@ cada linha do .txt contem as informações (nesta ordem):
 FLAGS_ALUControl_A_B_Y
 
 as flags e a saida y são os resultados esperados.
+
+o programa salva um arquivo erros.txt contendo quantos erros foram encontrados em tantos testes.
