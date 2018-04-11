@@ -7,10 +7,10 @@ module ULA (input logic [31:0] A, B,<br />
 	    output logic [3:0] ALUFlags);<br />
       
 ### ALUControl: <br />
-        00: Soma (A + B)<br />
-        01: Subtração (A - B)<br />
-        10: AND (A & B)<br />
-        11: OR (A | B)<br />
+        00: Soma (A + B)
+        01: Subtração (A - B)
+        10: AND (A & B)
+        11: OR (A | B)
   
 ### ALUFlags:<br />
         (Overflow, Carry, Negative, Zero)
