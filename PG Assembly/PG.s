@@ -20,4 +20,4 @@ WHILE		CMP R1, #10 		;Verificando condição de parada
 		BNE GG			;Se ultrapassar, termina. O PDF não informa se o programa precisa parar, escolhemos parar.
 		B WHILE			;Se não ultrapassar, continua
 		
-GG		LDR R4, [R6]
+GG		LDR R4, [R5]
