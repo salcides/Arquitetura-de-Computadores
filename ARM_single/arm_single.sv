@@ -157,18 +157,21 @@ module arm(input  logic        clk, reset,
   logic [3:0] ALUFlags;
   logic       RegWrite, 
               ALUSrc, MemtoReg, PCSrc;
-  logic [1:0] RegSrc, ImmSrc, ALUControl;
+  logic [1:0] RegSrc, ImmSrc ALUControl;
+  logic       Shift;				//Para a LSL
 
   controller c(clk, reset, Instr[31:12], ALUFlags, 
                RegSrc, RegWrite, ImmSrc, 
                ALUSrc, ALUControl,
-               MemWrite, MemtoReg, PCSrc);
+               MemWrite, MemtoReg, PCSrc,
+	       Shift);				//Para a LSL
   datapath dp(clk, reset, 
               RegSrc, RegWrite, ImmSrc,
               ALUSrc, ALUControl,
               MemtoReg, PCSrc,
               ALUFlags, PC, Instr,
-              ALUResult, WriteData, ReadData);
+              ALUResult, WriteData, ReadData,
+	      Shift);				//Para a LSL
 endmodule
 
 module controller(input  logic         clk, reset,
@@ -180,14 +183,16 @@ module controller(input  logic         clk, reset,
                   output logic         ALUSrc, 
                   output logic [1:0]   ALUControl,
                   output logic         MemWrite, MemtoReg,
-                  output logic         PCSrc);
+                  output logic         PCSrc,
+		  output logic	       Shift);	//Para a LSL
 
   logic [1:0] FlagW;
   logic       PCS, RegW, MemW;
   
   decoder dec(Instr[27:26], Instr[25:20], Instr[15:12],
               FlagW, PCS, RegW, MemW,
-              MemtoReg, ALUSrc, ImmSrc, RegSrc, ALUControl);
+              MemtoReg, ALUSrc, ImmSrc, RegSrc, ALUControl,
+	      Shift);				//Para a LSL
   condlogic cl(clk, reset, Instr[31:28], ALUFlags,
                FlagW, PCS, RegW, MemW,
                PCSrc, RegWrite, MemWrite);
@@ -199,7 +204,8 @@ module decoder(input  logic [1:0] Op,
                output logic [1:0] FlagW,
                output logic       PCS, RegW, MemW,
                output logic       MemtoReg, ALUSrc,
-               output logic [1:0] ImmSrc, RegSrc, ALUControl);
+	       output logic [1:0] ImmSrc, RegSrc, ALUControl,
+	       output logic	Shift);		//Para a LSL
 
   logic [9:0] controls;
   logic       Branch, ALUOp;
@@ -229,14 +235,38 @@ module decoder(input  logic [1:0] Op,
   always_comb
     if (ALUOp) begin                 // which DP Instr?
       case(Funct[4:1]) 
-  	    4'b0100: ALUControl = 2'b00; // ADD
-  	    4'b0010: ALUControl = 2'b01; // SUB
-            4'b0000: ALUControl = 2'b10; // AND
-  	    4'b1100: ALUControl = 2'b11; // ORR
-	    4'b1000: ALUControl = 2'b10; // TST
-	    4'b1010: ALUControl = 2'b01; // CMP
-	    4'b1101: ALUControl = 2'bx;  // LSL
-  	    default: ALUControl = 2'bx;  // unimplemented
+  	    4'b0100: begin		// ADD
+		    ALUControl = 2'b00;
+		    Shift = 1'b0;
+	    end
+  	    4'b0010: begin		// SUB
+		    ALUControl = 2'b01;
+		    Shift = 1'b0;
+	    end
+            4'b0000: begin 		// AND
+		    ALUControl = 2'b10;
+		    Shift = 1'b0;
+	    end
+  	    4'b1100: begin		// ORR
+		    ALUControl = 2'b11; 
+		    Shift = 1'b0;
+	    end
+	    4'b1000: begin		// TST
+		    ALUControl = 2'b10;
+		    //Ainda falta implementar
+	    end
+	    4'b1010: begin		// CMP
+		    ALUControl = 2'b01;
+		    //Ainda falta implementar
+	    end
+	    4'b1101: begin 		// LSL
+		    ALUControl = 2'bx;
+		    Shift = 1'b1;
+	    end
+  	    default: begin		// unimplemented
+		    ALUControl = 2'bx;
+		    Shift = 1'bx;
+	    end
       endcase
       // update flags if S bit is set 
 	// (C & V only updated for arith instructions)
@@ -318,12 +348,15 @@ module datapath(input  logic        clk, reset,
                 output logic [3:0]  ALUFlags,
                 output logic [31:0] PC,
                 input  logic [31:0] Instr,
-                output logic [31:0] ALUResult, WriteData,
-                input  logic [31:0] ReadData);
+		output logic [31:0] ALUResultOut,	//Para a LSL
+		output logic [31:0] WriteData,
+		input  logic [31:0] ReadData,
+		input  logic	    Shift);		//Para a LSL
 
   logic [31:0] PCNext, PCPlus4, PCPlus8;
   logic [31:0] ExtImm, SrcA, SrcB, Result;
   logic [3:0]  RA1, RA2;
+  logic [31:0] srcBshifted, ALUResult;			//Para a LSL
 
   // next PC logic
   mux2 #(32)  pcmux(PCPlus4, Result, PCSrc, PCNext);
@@ -341,9 +374,11 @@ module datapath(input  logic        clk, reset,
   extend      ext(Instr[23:0], ImmSrc, ExtImm);
 
   // ALU logic
-  mux2 #(32)  srcbmux(WriteData, ExtImm, ALUSrc, SrcB);
-  alu         alu(SrcA, SrcB, ALUControl, 
-                  ALUResult, ALUFlags);
+  shifter     sh(WriteData, Instr[11:7], Instr[6:5], srcBshifted);	//Para a LSL
+  mux2 #(32)  srcbmux(srcBshifted, ExtImm, ALUSrc, SrcB); 		//Para a LSL
+  
+  alu 	      alu(SrcA, SrcB, ALUControl, ALUResult, ALUFlags);
+  mux2 #(32)  aluresultmux(ALUResult, SrcB, Shift, ALUResultOut); 	//Para a LSL
 endmodule
 
 module regfile(input  logic        clk, 
