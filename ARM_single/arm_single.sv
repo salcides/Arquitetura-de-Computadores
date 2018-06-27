@@ -231,8 +231,11 @@ module decoder(input  logic [1:0] Op,
       case(Funct[4:1]) 
   	    4'b0100: ALUControl = 2'b00; // ADD
   	    4'b0010: ALUControl = 2'b01; // SUB
-          4'b0000: ALUControl = 2'b10; // AND
+            4'b0000: ALUControl = 2'b10; // AND
   	    4'b1100: ALUControl = 2'b11; // ORR
+	    4'b1000: ALUControl = 2'b10; // TST
+	    4'b1010: ALUControl = 2'b01; // CMP
+	    4'b1101: ALUControl = 2'bx;  // LSL
   	    default: ALUControl = 2'bx;  // unimplemented
       endcase
       // update flags if S bit is set 
