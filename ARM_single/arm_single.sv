@@ -480,3 +480,15 @@ module alu(input  logic [31:0] a, b,
                     (a[31] ^ sum[31]); 
   assign ALUFlags    = {neg, zero, carry, overflow};
 endmodule
+
+module shifter(input  logic [31:0] a,			//Módulo para o LSL
+	       input  logic  [4:0] shamt,
+	       input  logic  [1:0] shtype,
+	       output logic [31:0] y);
+	
+	always_comb
+		case(shtype)
+			2'b00:	 y = a << shamt;
+			default: y = a;
+		endcase
+endmodule
