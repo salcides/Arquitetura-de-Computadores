@@ -1,14 +1,13 @@
 // arm_single.sv
 // David_Harris@hmc.edu and Sarah_Harris@hmc.edu 25 June 2013
 // Single-cycle implementation of a subset of ARMv4
+// Igor & Gabriel 2018 (extended version CMP, TST, LSL)
 // 
-// run 210
 // Expect simulator to print "Simulation succeeded"
-// when the value 7 is written to address 100 (0x64)
 
 // 16 32-bit registers
 // Data-processing instructions
-//   ADD, SUB, AND, ORR
+//   ADD, SUB, AND, ORR, LSL, CMP, TST
 //   INSTR<cond><S> rd, rn, #immediate
 //   INSTR<cond><S> rd, rn, rm
 //    rd <- rn INSTR rm	      if (S) Update Status Flags
@@ -82,7 +81,7 @@ module testbench();
   logic        MemWrite;
 
   // instantiate device to be tested
-  top dut(clk, reset, WriteData, DataAdr, MemWrite);
+  top dut(clk, reset, WriteData, DataAdr, MemWrite);		
   
   // initialize test
   initial
@@ -96,15 +95,15 @@ module testbench();
       clk <= 1; # 5; clk <= 0; # 5;
     end
 
-  // check results
+  // check results 
   always @(negedge clk)
     begin
       if(MemWrite) begin
-        if(DataAdr === 100 & WriteData === 7) begin
+	$display(DataAdr);	//Endereço base da dupla = 400
+        if(DataAdr === 436 & WriteData === 1024) begin //Verifica se o endereço final e o dado estão corretos
           $display("Simulation succeeded");
-          $stop;
-        end else if (DataAdr !== 96) begin
-          $display("Simulation failed");
+	  $display("Posicao da memoria: ", DataAdr);
+	  $display("Conteudo da memoria: ", WriteData);	//Valor inicial da pg = 2
           $stop;
         end
       end
@@ -112,13 +111,13 @@ module testbench();
 endmodule
 
 module top(input  logic        clk, reset, 
-           output logic [31:0] WriteData, DataAdr, 
+           output logic [31:0] WriteData, DataAdr,		
            output logic        MemWrite);
 
   logic [31:0] PC, Instr, ReadData;
   
   // instantiate processor and memories
-  arm arm(clk, reset, PC, Instr, MemWrite, DataAdr, 
+  arm arm(clk, reset, PC, Instr, MemWrite, DataAdr,	
           WriteData, ReadData);
   imem imem(PC, Instr);
   dmem dmem(clk, MemWrite, DataAdr, WriteData, ReadData);
@@ -128,7 +127,7 @@ module dmem(input  logic        clk, we,
             input  logic [31:0] a, wd,
             output logic [31:0] rd);
 
-  logic [31:0] RAM[63:0];
+	logic [31:0] RAM[511:0]; //Aumentamos a memória para que nossa base coubesse (400)
 
   assign rd = RAM[a[31:2]]; // word aligned
 
@@ -138,11 +137,11 @@ endmodule
 
 module imem(input  logic [31:0] a,
             output logic [31:0] rd);
-
-  logic [31:0] RAM[63:0];
+ 
+	logic [31:0] RAM[63:0];
 
   initial
-      $readmemh("memfile.dat",RAM);
+      $readmemh("PGfile.dat",RAM);
 
   assign rd = RAM[a[31:2]]; // word aligned
 endmodule
@@ -151,27 +150,26 @@ module arm(input  logic        clk, reset,
            output logic [31:0] PC,
            input  logic [31:0] Instr,
            output logic        MemWrite,
-           output logic [31:0] ALUResult, WriteData,
+           output logic [31:0] ALUResult, WriteData,	
            input  logic [31:0] ReadData);
 
   logic [3:0] ALUFlags;
   logic       RegWrite, 
               ALUSrc, MemtoReg, PCSrc;
   logic [1:0] RegSrc, ImmSrc, ALUControl;
-  logic       Shift;				//Para a LSL
 
   controller c(clk, reset, Instr[31:12], ALUFlags, 
                RegSrc, RegWrite, ImmSrc, 
                ALUSrc, ALUControl,
                MemWrite, MemtoReg, PCSrc,
-	       Shift);				//Para a LSL
+		Shift); 				//Para LSL
   datapath dp(clk, reset, 
               RegSrc, RegWrite, ImmSrc,
               ALUSrc, ALUControl,
               MemtoReg, PCSrc,
               ALUFlags, PC, Instr,
-              ALUResult, WriteData, ReadData,
-	      Shift);				//Para a LSL
+              ALUResult, WriteData, ReadData,		
+		Shift); 				//Para LSL
 endmodule
 
 module controller(input  logic         clk, reset,
@@ -184,18 +182,17 @@ module controller(input  logic         clk, reset,
                   output logic [1:0]   ALUControl,
                   output logic         MemWrite, MemtoReg,
                   output logic         PCSrc,
-		  output logic	       Shift);	//Para a LSL
+		  output logic         Shift); 		//Para LSL
 
   logic [1:0] FlagW;
-  logic       PCS, RegW, MemW;
+  logic       PCS, RegW, MemW, NoWrite;			//NoWrite
   
   decoder dec(Instr[27:26], Instr[25:20], Instr[15:12],
               FlagW, PCS, RegW, MemW,
-              MemtoReg, ALUSrc, ImmSrc, RegSrc, ALUControl,
-	      Shift);				//Para a LSL
+              MemtoReg, ALUSrc, NoWrite, ImmSrc, RegSrc, ALUControl, Shift); //NoWrite e LSL
   condlogic cl(clk, reset, Instr[31:28], ALUFlags,
-               FlagW, PCS, RegW, MemW,
-               PCSrc, RegWrite, MemWrite);
+               FlagW, PCS, RegW, MemW, NoWrite,
+               PCSrc, RegWrite, MemWrite); 		//NoWrite
 endmodule
 
 module decoder(input  logic [1:0] Op,
@@ -203,9 +200,9 @@ module decoder(input  logic [1:0] Op,
                input  logic [3:0] Rd,
                output logic [1:0] FlagW,
                output logic       PCS, RegW, MemW,
-               output logic       MemtoReg, ALUSrc,
-	       output logic [1:0] ImmSrc, RegSrc, ALUControl,
-	       output logic	Shift);		//Para a LSL
+               output logic       MemtoReg, ALUSrc, NoWrite, //NoWrite
+               output logic [1:0] ImmSrc, RegSrc, ALUControl,
+	       output logic Shift); 			//Para LSL
 
   logic [9:0] controls;
   logic       Branch, ALUOp;
@@ -234,60 +231,78 @@ module decoder(input  logic [1:0] Op,
   // ALU Decoder             
   always_comb
     if (ALUOp) begin                 // which DP Instr?
-      case(Funct[4:1]) 
-  	    4'b0100: begin		// ADD
-		    ALUControl = 2'b00;
-		    Shift = 1'b0;
-	    end
-  	    4'b0010: begin		// SUB
-		    ALUControl = 2'b01;
-		    Shift = 1'b0;
-	    end
-            4'b0000: begin 		// AND
-		    ALUControl = 2'b10;
-		    Shift = 1'b0;
-	    end
-  	    4'b1100: begin		// ORR
-		    ALUControl = 2'b11; 
-		    Shift = 1'b0;
-	    end
-	    4'b1000: begin		// TST
-		    ALUControl = 2'b10;
-		    //Ainda falta implementar
-	    end
-	    4'b1010: begin		// CMP
-		    ALUControl = 2'b01;
-		    //Ainda falta implementar
-	    end
-	    4'b1101: begin 		// LSL
-		    ALUControl = 2'bx;
-		    Shift = 1'b1;
-	    end
-  	    default: begin		// unimplemented
-		    ALUControl = 2'bx;
-		    Shift = 1'bx;
-	    end
+	case(Funct[4:1]) 
+		4'b0100: begin //ADD
+			ALUControl = 2'b00;
+			  NoWrite = 1'b0;
+			  Shift = 1'b0;
+		end
+		4'b0010: begin  //SUB
+			ALUControl = 2'b01; 
+			  NoWrite = 1'b0;
+			  Shift = 1'b0;
+		end
+		4'b0000: begin //AND
+			ALUControl = 2'b10;
+			  NoWrite = 1'b0;
+			  Shift = 1'b0;
+		end
+		4'b1100: begin //ORR
+			ALUControl = 2'b11;
+			  NoWrite = 1'b0;
+			  Shift = 1'b0;
+		end
+		4'b1010: begin //CMP
+			ALUControl = 2'b01; 
+			  NoWrite = 1'b1;
+			  Shift = 1'b0;
+		end
+		4'b1000: begin //TST
+			ALUControl = 2'b10;
+			  NoWrite = 1'b1;
+			  Shift = 1'b0;
+		end
+		4'b1101: begin //LSL
+			ALUControl = 2'bx; 
+			  NoWrite = 1'b0;
+			  Shift = 1'b1;
+		end
+		default: begin //unimplemented
+			ALUControl = 2'bx;
+			  NoWrite = 1'bx;
+			  Shift = 1'b0;
+		end
       endcase
-      // update flags if S bit is set 
+
+//LSL
+      if(Funct[4:1] == 4'b1101) begin //Realiza <<
+	    
+      end
+      else if(Funct[4:1] != 4'b1101) begin //Não realiza <<
+	    
+      end 
+
+      //Flags
+      FlagW[1] = Funct[0]; // FlagW[1] = S-bit
 	// (C & V only updated for arith instructions)
-      FlagW[1]      = Funct[0]; // FlagW[1] = S-bit
-	// FlagW[0] = S-bit & (ADD | SUB)
-      FlagW[0]      = Funct[0] & 
-        (ALUControl == 2'b00 | ALUControl == 2'b01); 
+      FlagW[0] = Funct[0] & 
+        (ALUControl == 2'b00 | ALUControl == 2'b01); // FlagW[0] = S-bit & (ADD | SUB) 
     end else begin
       ALUControl = 2'b00; // add for non-DP instructions
       FlagW      = 2'b00; // don't update Flags
-    end
+
+end
               
   // PC Logic
   assign PCS  = ((Rd == 4'b1111) & RegW) | Branch; 
+
 endmodule
 
 module condlogic(input  logic       clk, reset,
                  input  logic [3:0] Cond,
                  input  logic [3:0] ALUFlags,
                  input  logic [1:0] FlagW,
-                 input  logic       PCS, RegW, MemW,
+                 input  logic       PCS, RegW, MemW, NoWrite,    //NoWrite
                  output logic       PCSrc, RegWrite, MemWrite);
                  
   logic [1:0] FlagWrite;
@@ -302,7 +317,7 @@ module condlogic(input  logic       clk, reset,
   // write controls are conditional
   condcheck cc(Cond, Flags, CondEx);
   assign FlagWrite = FlagW & {2{CondEx}};
-  assign RegWrite  = RegW  & CondEx;
+  assign RegWrite  = RegW  & CondEx & ~NoWrite;  //NoWrite
   assign MemWrite  = MemW  & CondEx;
   assign PCSrc     = PCS   & CondEx;
 endmodule    
@@ -348,15 +363,13 @@ module datapath(input  logic        clk, reset,
                 output logic [3:0]  ALUFlags,
                 output logic [31:0] PC,
                 input  logic [31:0] Instr,
-		output logic [31:0] ALUResultOut,	//Para a LSL
-		output logic [31:0] WriteData,
-		input  logic [31:0] ReadData,
-		input  logic	    Shift);		//Para a LSL
+                output logic [31:0] ALUResult, WriteData,		
+                input  logic [31:0] ReadData,
+		input logic	    Shift);	 //Para LSL
 
   logic [31:0] PCNext, PCPlus4, PCPlus8;
-  logic [31:0] ExtImm, SrcA, SrcB, Result;
-  logic [3:0]  RA1, RA2;
-  logic [31:0] srcBshifted, ALUResult;			//Para a LSL
+  logic [31:0] ExtImm, SrcA, SrcB, Result, Result_, Shifted; //Para LSL
+  logic [3:0]  RA1, RA2, RA1_;
 
   // next PC logic
   mux2 #(32)  pcmux(PCPlus4, Result, PCSrc, PCNext);
@@ -365,27 +378,32 @@ module datapath(input  logic        clk, reset,
   adder #(32) pcadd2(PCPlus4, 32'b100, PCPlus8);
 
   // register file logic
-  mux2 #(4)   ra1mux(Instr[19:16], 4'b1111, RegSrc[0], RA1);
+  mux2 #(4)   ra1mux_(Instr[19:16], 4'b1111, RegSrc[0], RA1_);  //Para LSL
+  mux2 #(4)   ra1mux(RA1_, Instr[3:0], Shift, RA1); 		//Para LSL
   mux2 #(4)   ra2mux(Instr[3:0], Instr[15:12], RegSrc[1], RA2);
   regfile     rf(clk, RegWrite, RA1, RA2,
                  Instr[15:12], Result, PCPlus8, 
-                 SrcA, WriteData); 
-  mux2 #(32)  resmux(ALUResult, ReadData, MemtoReg, Result);
+                 SrcA, WriteData); 		
+
+  mux2 #(32)  resmux_(ALUResult, ReadData, MemtoReg, Result_);  //Para LSL
+  mux2 #(32)  resmux(Result_, Shifted, Shift, Result);
+
   extend      ext(Instr[23:0], ImmSrc, ExtImm);
+  shifter     sh1(SrcA,Instr[11:7],Shifted);
+
 
   // ALU logic
-  shifter     sh(WriteData, Instr[11:7], Instr[6:5], srcBshifted);	//Para a LSL
-  mux2 #(32)  srcbmux(srcBshifted, ExtImm, ALUSrc, SrcB); 		//Para a LSL
-  
-  alu 	      alu(SrcA, SrcB, ALUControl, ALUResult, ALUFlags);
-  mux2 #(32)  aluresultmux(ALUResult, SrcB, Shift, ALUResultOut); 	//Para a LSL
+  mux2 #(32)  srcbmux(WriteData, ExtImm, ALUSrc, SrcB);
+  alu         alu(SrcA, SrcB, ALUControl, 
+                  ALUResult, ALUFlags);
+
 endmodule
 
 module regfile(input  logic        clk, 
                input  logic        we3, 
                input  logic [3:0]  ra1, ra2, wa3, 
                input  logic [31:0] wd3, r15,
-               output logic [31:0] rd1, rd2);
+               output logic [31:0] rd1, rd2);		
 
   logic [31:0] rf[14:0];
 
@@ -481,14 +499,12 @@ module alu(input  logic [31:0] a, b,
   assign ALUFlags    = {neg, zero, carry, overflow};
 endmodule
 
-module shifter(input  logic [31:0] a,			//Módulo para o LSL
-	       input  logic  [4:0] shamt,
-	       input  logic  [1:0] shtype,
-	       output logic [31:0] y);
-	
-	always_comb
-		case(shtype)
-			2'b00:	 y = a << shamt;
-			default: y = a;
-		endcase
+module shifter(input logic  [31:0] a,		//Módulo para realizar Shift (instrução LSL)
+               input logic   [4:0] shamt,
+               output logic [31:0] y);
+
+	initial
+		begin
+			assign y = a << shamt;
+	end
 endmodule
