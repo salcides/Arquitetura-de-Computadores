@@ -8,7 +8,7 @@
 		AND		R5, R5, #0 		;Zerando
 		ADD		R5, R5, #400 		;X = 4 (posição base*100 e registrador RX da dupla)
 		AND		R6, R6, #0 		;Zerando
-		ADD		R6, R6, #3 		;Registrador 6 guarda o valor inicial da PG = 3
+		ADD		R6, R6, #2 		;Registrador 6 guarda o valor inicial da PG = 2
 		STR		R6, [R5] 		;Guarda o valor base no endereço de memória base
 		AND		R7, R7, #0		;Zerando
 		ADD		R7, R7, #0x80000000 	;Valor máximo que a PG pode assumir (2147483648)
