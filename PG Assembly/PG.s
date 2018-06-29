@@ -20,7 +20,6 @@ WHILE		CMP		R1, #10 		;Verificando condição de parada
 		ADD		R5, R5, #4  		;Incrementa a posição de memória em 32 bits
 		STR		R6, [R5]		;Guarda valor atual no endereço devidamente deslocado
 		TST		R6, R7			;Verifica se o valor da PG ultrapassou o valor máximo
-		BNE		GG			;Se ultrapassar, termina. O PDF não informa se o programa precisa parar, escolhemos parar.
 		B		WHILE			;Se não ultrapassar, continua
 		
 GG		LDR		R4, [R5]
