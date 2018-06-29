@@ -6,7 +6,8 @@
 		AND		R1, R1, #0 		;Zerando
 		ADD		R1, R1, #1 		;R1 será o contador
 		AND		R5, R5, #0 		;Zerando
-		ADD		R5, R5, #400 		;X = 4 (posição base*100 e registrador RX da dupla)
+		ADD		R5, R5, #200 		;
+		ADD		R5, R5, #200 		;X = 4 (posição base*100 e registrador RX da dupla)
 		AND		R6, R6, #0 		;Zerando
 		ADD		R6, R6, #2 		;Registrador 6 guarda o valor inicial da PG = 2
 		STR		R6, [R5] 		;Guarda o valor base no endereço de memória base
