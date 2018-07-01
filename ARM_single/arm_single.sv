@@ -274,14 +274,6 @@ module decoder(input  logic [1:0] Op,
 		end
       endcase
 
-//LSL
-      if(Funct[4:1] == 4'b1101) begin //Realiza <<
-	    
-      end
-      else if(Funct[4:1] != 4'b1101) begin //Não realiza <<
-	    
-      end 
-
       //Flags
       FlagW[1] = Funct[0]; // FlagW[1] = S-bit
 	// (C & V only updated for arith instructions)
